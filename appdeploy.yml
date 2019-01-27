@@ -1,0 +1,50 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: hello-world-app
+spec:
+  replicas: 2 # tells deployment to run 2 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      # generated from the deployment name
+      labels:
+        app: hwapp-dev
+    spec:
+      containers:
+      - name: hwapp
+        image: abhivaidya/hello-world-sprboot
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hwapp-svc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: hwapp-dev
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-hwapp
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  backend:
+    serviceName: default-http-backend
+    servicePort: 80
+  rules:
+  - host: ec2-18-205-239-21.compute-1.amazonaws.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: hwapp-svc
+          servicePort: 8080
